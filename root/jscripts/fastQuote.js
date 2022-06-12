@@ -1,6 +1,7 @@
 /**
  * This file is part of View Unread Posts plugin for MyBB.
  * Copyright (C) Lukasz Tkacz <lukasamd@gmail.com>
+ * Modded by Alekz.net
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
