@@ -329,9 +329,9 @@ function domToBB(domEl)
 					closeTag = "[/u]";
 					break;
 				case "IMG":
-						openTag ="[img]";
-						content = childNode.src;
-						closeTag = "[/img]";
+					openTag ="[img]";
+					content = childNode.src.replace(/\.pagespeed\..*$/gi,"";
+					closeTag = "[/img]";
 					break;
 				case "A":
 					switch(true)
