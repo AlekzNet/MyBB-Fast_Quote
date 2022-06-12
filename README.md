@@ -1,4 +1,4 @@
-The pkugin is originally created by Łukasz Tkacz https://github.com/lukasamd/MyBB-Fast_Quote
+The plugin is originally created by Łukasz Tkacz https://github.com/lukasamd/MyBB-Fast_Quote
 
 This plugin provide very fast quote option - select text and click button! 
 
