@@ -1,5 +1,5 @@
 /**
- * This file is part of Fast Quote plugin for MyBB.
+ * This file is part of View Unread Posts plugin for MyBB.
  * Copyright (C) Lukasz Tkacz <lukasamd@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -133,18 +133,39 @@ function addquote(post_id, post_time, username, l_wrote)
 	}
 
 	// Get text selection - not only the post content :(
-	if (window.getSelection)
-	{
-		theSelection = window.getSelection().toString();
+	
+		var selectionObject = false;
+		var theSelectionText = "";
+		if (window.getSelection) {
+			selectionObject = window.getSelection();
+			if(selectionObject.getRangeAt) {
+				theSelection = selectionObject.getRangeAt(0).cloneContents();
+				theSelectionText = theSelection.toString();
+			} else {
+				theSelection = document.createRange();
+				theSelection.setStart(selectionObject.anchorNode,selectionObject.anchorOffset);
+				theSelection.setEnd(selectionObject.focusNode, selectionObject.focusOffset);
+				theSelectionText = theSelection.toString();
+			}
+
+		}
+		else if (document.selection) {
+			selectionObject = document.selection.createRange();
+			theSelection = document.createElement("DIV");
+			theSelection.innerHTML = selectionObject.htmlText;
+			theSelectionText = selectionObject.text;
+		}
+		else {
+			userSelection = false;
+		}
+
+
+	if (theSelection) {
+		theSelection = domToBB(theSelection);
 	}
-	else if (document.getSelection)
-	{
-		theSelection = document.getSelection();
-	}
-	else if (document.selection)
-	{
-		theSelection = document.selection.createRange().text;
-	}
+
+
+
 
 	if (theSelection == '' || typeof theSelection == 'undefined' || theSelection == null)
 	{
@@ -187,7 +208,7 @@ function addquote(post_id, post_time, username, l_wrote)
 			}
 		}
 	}
-
+	
 	return;
 }
 
@@ -218,4 +239,189 @@ function mozWrap(txtarea, open, close)
 	txtarea.scrollTop = scrollTop;
 
 	return;
+}
+
+function domToBB(domEl)
+{
+	var output = "";
+	var childNode;
+	var openTag;
+	var content;
+	var closeTag;
+				
+	for(var i = 0 ; i < domEl.childNodes.length ; i++)
+	{	
+		childNode = domEl.childNodes[i];
+		openTag = "";
+		content = "";
+		closeTag = "";
+					
+		if(typeof childNode.tagName == "undefined")
+		{
+			switch(childNode.nodeName)
+			{
+				case '#text':
+					output += childNode.data.replace(/[\n\t]+/,'');
+				break;
+				default:
+					// do nothing
+				break;
+				
+			}
+		}
+		else
+		{
+			switch(childNode.tagName)
+			{
+				case "SPAN":
+					// check style attributes
+					switch(true)
+					{
+						case childNode.style.textDecoration == "underline":
+							openTag = "[u]";
+							closeTag = "[/u]";
+							break;
+						case childNode.style.fontWeight > 0:
+						case childNode.style.fontWeight == "bold":
+							openTag = "[b]";
+							closeTag = "[/b]";
+							break;
+						case childNode.style.fontStyle == "italic":
+							openTag = "[i]";
+							closeTag = "[/i]";
+							break;
+						case childNode.style.fontFamily != "":
+							openTag = "[font=" + childNode.style.fontFamily + "]";
+							closeTag = "[/font]";
+							break;
+						case childNode.style.fontSize != "":
+							openTag = "[size=" + childNode.style.fontSize + "]";
+							closeTag = "[/size]";
+							break;
+						case childNode.style.color != "":
+							if(childNode.style.color.indexOf('rgb') != -1)
+							{
+								var rgb = childNode.style.color.replace("rgb(","").replace(")","").split(",");
+								var hex = "#"+ RGBtoHex(parseInt(rgb[0]) , parseInt(rgb[1]) , parseInt(rgb[2]));
+							}
+							else
+							{
+								var hex = childNode.style.color;
+							}
+							openTag = "[color=" + hex + "]";
+							closeTag = "[/color]";
+							break;
+					}
+					break;
+				case "STRONG":
+				case "B":
+					openTag = "[b]";
+					closeTag = "[/b]";
+					break;
+				case "EM":
+				case "I":
+					openTag = "[i]";
+					closeTag = "[/i]";
+					break;
+				case "U":
+					openTag = "[u]";
+					closeTag = "[/u]";
+					break;
+				case "IMG":
+						openTag ="[img]";
+						content = childNode.src;
+						closeTag = "[/img]";
+					break;
+				case "A":
+					switch(true)
+					{
+						case childNode.href.indexOf("mailto:") == 0:
+							openTag = "[email=" + childNode.href.replace("mailto:","") + "]";
+							closeTag = "[/email]";
+						break;
+						default:
+							openTag = "[url=" + childNode.href + "]";
+							closeTag = "[/url]";
+						break;
+					}
+					break;
+				case "OL":
+					openTag = "[list=" + childNode.type + "]";
+					closeTag = "\n[/list]";
+					break;
+				case "UL":
+					openTag = "[list]";
+					closeTag = "\n[/list]";
+					break;
+				case "LI":
+					openTag = "\n[*]";
+					closeTag = "";
+					break;
+				case "BLOCKQUOTE":
+					childNode.removeChild(childNode.firstChild);
+					openTag = "[quote]\n";
+					closeTag = "\n[/quote]";
+					break;
+				case "DIV":
+					if(childNode.style.textAlign)
+					{
+						openTag = "[align="+childNode.style.textAlign+"]\n";
+						closeTag = "\n[/align]\n";
+					}
+					
+					switch(childNode.className)
+					{
+						case "codeblock":
+							openTag = "[code]\n";
+							closeTag = "\n[/code]";
+							childNode.removeChild(childNode.getElementsByTagName("div")[0]);
+							break;
+						case "codeblock phpcodeblock":
+							var codeTag = childNode.getElementsByTagName("code")[0];
+							childNode.removeChild(childNode.getElementsByTagName("div")[0]);
+							openTag = "[php]\n";
+							if(codeTag.innerText)
+							{
+								content = codeTag.innerText;
+							}
+							else
+							{
+								//content = codeTag.textContent;
+								content = codeTag.innerHTML.replace(/<br([^>]*)>/gi,"\n").replace(/<([^<]+)>/gi,'').replace(/&nbsp;/gi,' ');
+							}
+							closeTag = "\n[/php]";
+							break;
+					}
+					break;
+				case "P":
+						closeTag = "\n\n";
+					break;
+				case "BR":
+						closeTag = "\n"
+					break;
+			}
+						
+			output += openTag + content;
+						
+			if(content == "" && childNode.childNodes && childNode.childNodes.length > 0)
+			{
+				output += domToBB(childNode);
+			}
+						
+			output += closeTag;
+		}
+	}
+				
+	return output;
+}
+
+function RGBtoHex (R,G,B) {return toHex(R)+ toHex(G)+ toHex(B)}
+
+function toHex (N)
+{
+	if (N==null) return "00";
+	N=parseInt(N); if (N==0 || isNaN(N)) return "00";
+	N=Math.max(0,N); N=Math.min(N,255); N=Math.round(N);
+	return "0123456789ABCDEF".charAt((N-N%16)/16)
+			+ "0123456789ABCDEF".charAt(N%16);
 }
