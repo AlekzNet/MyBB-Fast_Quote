@@ -2,6 +2,7 @@
 /**
  * This file is part of Fast Quote plugin for MyBB.
  * Copyright (C) Lukasz Tkacz <lukasamd@gmail.com>
+ * Modded by Alekz.Net
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -46,9 +47,9 @@ function fastQuote_info() {
         'name' => $lang->fastQuoteName,
         'description' => $lang->fastQuoteDesc,
         'website' => 'https://tkacz.pro',
-        'author' => 'Lukasz Tkacz',
+        'author' => 'Lukasz Tkacz and Alekz.Net',
         'authorsite' => 'https://tkacz.pro',
-        'version' => '1.3.0',
+        'version' => '1.4.0',
         'compatibility' => '18*',
         'codename' => 'fast_quote'
     );
